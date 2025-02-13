@@ -1,0 +1,40 @@
+name: Build Windows App
+
+on:
+  push:
+    branches:
+      - main  # 监听 main 分支的 push 事件
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest  # 使用 GitHub 的 Windows 云服务器
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3  # 拉取你的仓库代码
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2  # 安装 Flutter
+        with:
+          flutter-version: 'stable'
+
+      - name: Enable Windows Support
+        run: flutter config --enable-windows-desktop  # 启用 Windows 平台
+
+      - name: Install Dependencies
+        run: flutter pub get  # 获取 Flutter 依赖
+
+      - name: Build Windows App
+        run: flutter build windows  # 构建 Windows 应用
+
+      - name: Compress Build Files
+        run: |
+          Compress-Archive -Path build/windows/runner/Release/* -DestinationPath windows-app.zip
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-build
+          path: windows-app.zip
