@@ -38,7 +38,7 @@ jobs:
           directory: build/windows/x64/runner/Release
           
       - name: Upload Release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-build
           path: build/windows/x64/runner/Release/windows-release.zip
