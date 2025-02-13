@@ -3,22 +3,23 @@ name: Build Windows App
 on:
   push:
     branches:
-      - main  # 当代码推送到 main 分支时触发
+      - main  # 监听 main 分支的 push 事件
   pull_request:
     branches:
-      - main  # 当 PR 合并到 main 分支时触发
+      - main
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用 GitHub 提供的 Windows 云服务器
+    runs-on: windows-latest  # 使用 GitHub 的 Windows 云服务器
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4  # 拉取最新代码
+        uses: actions/checkout@v4  # 拉取你的仓库代码
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2  # 安装 Flutter
         with:
-          flutter-version: 'stable'
+          flutter-version: "3.16.5"  # 解决无法解析 stable 版本的问题
+          channel: stable
 
       - name: Enable Windows Support
         run: flutter config --enable-windows-desktop  # 启用 Windows 桌面支持
