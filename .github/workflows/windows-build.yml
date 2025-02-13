@@ -2,51 +2,34 @@ name: Windows Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:  # 允许手动触发
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest  # 使用Windows环境
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v3
       
-      - name: Setup Flutter
+      - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          flutter-version: '3.16.0'
           channel: 'stable'
           cache: true
-      
-      - name: Check Flutter version
-        run: |
-          flutter --version
-          dart --version
-      
+          
       - name: Install dependencies
-        run: |
-          flutter upgrade
-          flutter pub get
+        run: flutter pub get
         
       - name: Enable windows build
         run: flutter config --enable-windows-desktop
         
-      - name: Build Windows
+      - name: Build artifacts
         run: flutter build windows --release
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Windows Build v${{ github.run_number }}
-          draft: false
-          prerelease: false
-          
       - name: Archive Release
         uses: thedoctor0/zip-release@master
         with:
@@ -54,12 +37,8 @@ jobs:
           filename: 'windows-release.zip'
           directory: build/windows/x64/runner/Release
           
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release
+        uses: actions/upload-artifact@v3
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/windows/x64/runner/Release/windows-release.zip
-          asset_name: windows-release.zip
-          asset_content_type: application/zip
+          name: windows-build
+          path: build/windows/x64/runner/Release/windows-release.zip
