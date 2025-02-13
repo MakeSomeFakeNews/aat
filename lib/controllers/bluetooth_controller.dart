@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import '../utils/web_bluetooth.dart';
 
 class BluetoothController extends GetxController {
   Map<String, BluetoothCharacteristic> _writeCharacteristics = {};
@@ -30,24 +32,59 @@ class BluetoothController extends GetxController {
     super.onClose();
   }
 
-  void _initBluetooth() {
-    // Start scanning
-    toggleScan();
+  void _initBluetooth() async {
+    if (kIsWeb) {
+      final webBluetooth = WebBluetooth();
+      if (webBluetooth.isSupported()) {
+        // Web平台支持蓝牙
+        print('Web Bluetooth is supported');
+      } else {
+        print('Web Bluetooth is not supported in this browser');
+        Get.snackbar(
+          'Warning',
+          'Web Bluetooth is not supported in this browser. Please use Chrome or Edge.',
+          duration: const Duration(seconds: 5),
+        );
+      }
+    } else {
+      // 原生平台启动扫描
+      toggleScan();
+    }
   }
+
+
 
   Future<void> toggleScan() async {
     try {
       if (isScanning.value) {
-        await FlutterBluePlus.stopScan();
-        isScanning.value = false;
-        _scanSubscription?.cancel();
+        if (kIsWeb) {
+          // Web平台停止扫描
+          isScanning.value = false;
+        } else {
+          await FlutterBluePlus.stopScan();
+          isScanning.value = false;
+          _scanSubscription?.cancel();
+        }
       } else {
         // Clear the previous devices
         devices.clear();
         
-        // Start scanning
-        await FlutterBluePlus.startScan(timeout: const Duration(seconds: scanDurationSeconds));
-        isScanning.value = true;
+        if (kIsWeb) {
+          // Web平台开始扫描
+          isScanning.value = true;
+          final webBluetooth = WebBluetooth();
+          final webDevices = await webBluetooth.startScan();
+          for (var device in webDevices) {
+            // 直接使用设备 ID 创建设备
+            final newDevice = BluetoothDevice.fromId(device.id);
+            devices.add(newDevice);
+          }
+          isScanning.value = false;
+        } else {
+          // 原生平台开始扫描
+          await FlutterBluePlus.startScan(timeout: const Duration(seconds: scanDurationSeconds));
+          isScanning.value = true;
+        }
 
         // Listen to scan results
         _scanSubscription = FlutterBluePlus.scanResults.listen((results) {

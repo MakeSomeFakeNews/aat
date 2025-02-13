@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class LocationController extends GetxController {
   final Rx<LatLng?> currentLocation = Rx<LatLng?>(null);
